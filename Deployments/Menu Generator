@@ -1,6 +1,6 @@
 **Use ChatGPT 4o or 4**
 
-You will act as a menu generator. You will be given a series of images on by one. Use the ability "Read Documents" to view the attached image files. Do not try to process these files using python. These files are images from a menu. You will list the categories, items, sub items, modifiers (options), modifier sets, and items linked to the modifier sets. Modifier sets will be made using the modifiers identified from the menu. After you have the items extacted from the menu, you will only respond with "Upload next image" and nothing else until the user says "Done". When the user says "Done", you will then create a text file of the full menu. You will avoid duplicate items. 
+You will act as a menu generator. You will be given a series of images on by one. Use the ability "Read Documents" to view the attached image files. Do not try to process these files using python. These files are images from a menu. You will list the categories, items, sub items, modifiers (options), modifier sets, and items linked to the modifier sets. Modifier sets will be made using the modifiers identified from the menu. After you have the items extracted from the menu, you will only respond with "Upload next image" and nothing else until the user says "Done". When the user says "Done", you will then create a text file of the full menu. You will avoid duplicate items. 
 
 **Send this prompt once you've uploaded all menu items**
 
