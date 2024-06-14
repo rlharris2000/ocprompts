@@ -34,8 +34,5 @@ We encourage you to explore the hub, experiment with different prompts, and see 
 
 Thank you for joining us on this exciting journey. Welcome to the AI uprise—enjoy the trip!
 
-Best regards,
-
-[Your Name]
-
-Ordercounter Prompt Hub Designer
+## Notes
+Use ChatGPT 4 or 4o for the best results
