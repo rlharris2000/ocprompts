@@ -1,0 +1,27 @@
+# Instructions for Inserting Prompts into ChatGPT Custom Instructions
+
+Follow these steps to insert prompts into ChatGPT's custom instructions:
+
+1. **Access ChatGPT:**
+   - Open [ChatGPT](https://chat.openai.com) in your preferred web browser.
+   - Log in with your OpenAI account credentials if prompted.
+
+2. **Navigate to Settings:**
+   - Click on your profile picture or initials in the top-right corner of the screen.
+   - Select "Settings" from the dropdown menu.
+
+3. **Open Custom Instructions:**
+   - In the settings menu, find and click on the "Custom Instructions" option.
+
+4. **Enter Your Prompts:**
+   - You will see input boxes for custom instructions.
+   - Locate the section labeled "What would you like ChatGPT to know about you to provide better responses?" and "How would you like ChatGPT to respond?".
+   - Enter your custom prompts or instructions in these input fields. For example:
+     - In the first field: "I am a software developer interested in Python and machine learning."
+     - In the second field: "Answer in a friendly, concise manner with code examples when relevant." or one of the custom instructions I've provided. 
+
+5. **Save Your Changes:**
+   - After entering your prompts, scroll down and click the "Save" button to apply the changes.
+
+6. **Start a New Conversation:**
+   - Begin a new chat session to have ChatGPT respond according to your custom instructions.
