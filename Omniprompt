@@ -1,0 +1,156 @@
+import tkinter as tk
+from tkinter import messagebox
+
+
+class SimplePOSSystem(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title('Simple POS System')
+        self.geometry('800x600')  # Set window size
+
+        # Sample list of products and their prices
+        self.products = {'Apple': 1.0, 'Banana': 0.5, 'Orange': 0.8}
+
+        self.create_menu()
+        self.create_widgets()
+
+    def create_menu(self):
+        # Create a menu bar
+        menubar = tk.Menu(self)
+
+        # File menu
+        file_menu = tk.Menu(menubar, tearoff=0)
+        file_menu.add_command(label="Exit", command=self.quit)
+        menubar.add_cascade(label="File", menu=file_menu)
+
+        # Help menu
+        help_menu = tk.Menu(menubar, tearoff=0)
+        help_menu.add_command(label="About", command=self.show_about)
+        menubar.add_cascade(label="Help", menu=help_menu)
+
+        # Display the menu
+        self.config(menu=menubar)
+
+    def create_widgets(self):
+        # Create a main frame
+        main_frame = tk.Frame(self)
+        main_frame.pack(fill='both', expand=True)
+
+        self.create_product_list(main_frame)
+        self.create_product_details(main_frame)
+        self.create_cart(main_frame)
+
+    def create_product_list(self, parent):
+        # Frame for the product list
+        left_frame = tk.Frame(parent)
+        left_frame.pack(side='left', fill='both', expand=True)
+
+        # Label for the product list
+        label = tk.Label(left_frame, text="Product List")
+        label.pack(pady=10)
+
+        # Listbox to display products
+        self.product_listbox = tk.Listbox(left_frame)
+        self.product_listbox.pack(pady=10, padx=10, fill='both', expand=True)
+
+        # Populate the listbox with product names
+        for product in self.products.keys():
+            self.product_listbox.insert(tk.END, product)
+
+        # Bind the selection event to a handler
+        self.product_listbox.bind('<<ListboxSelect>>', self.on_product_select)
+
+    def create_product_details(self, parent):
+        # Frame for product details and controls
+        right_frame = tk.Frame(parent)
+        right_frame.pack(side='right', fill='both', expand=True, padx=10, pady=10)
+
+        # Selected product label and entry
+        self.create_labeled_entry(right_frame, "Selected Product", state='disabled')
+
+        # Quantity label and entry
+        self.create_labeled_entry(right_frame, "Quantity")
+
+        # Button to add the product to the cart
+        add_to_cart_button = tk.Button(right_frame, text="Add to Cart", command=self.add_to_cart)
+        add_to_cart_button.pack(pady=10)
+
+    def create_cart(self, parent):
+        # Frame for the shopping cart
+        right_frame = parent.winfo_children()[-1]
+
+        # Listbox to display items in the shopping cart
+        self.cart_listbox = tk.Listbox(right_frame)
+        self.cart_listbox.pack(pady=10, fill='both', expand=True)
+
+        # Total price label and entry
+        total_frame = self.create_labeled_entry(right_frame, "Total", state='disabled')
+
+        # Button to checkout
+        checkout_button = tk.Button(total_frame, text="Checkout", command=self.checkout)
+        checkout_button.pack(pady=10, padx=5)
+
+        # Initialize total price
+        self.total_price = 0.0
+
+    def create_labeled_entry(self, parent, label_text, state='normal'):
+        """Helper method to create a labeled entry widget."""
+        frame = tk.Frame(parent)
+        frame.pack(pady=10, fill='x')
+
+        label = tk.Label(frame, text=label_text)
+        label.pack(side='left', padx=5)
+
+        entry = tk.Entry(frame, state=state)
+        entry.pack(side='left', padx=5)
+
+        if label_text == "Selected Product":
+            self.selected_product_entry = entry
+        elif label_text == "Quantity":
+            self.quantity_entry = entry
+        elif label_text == "Total":
+            self.total_price_entry = entry
+
+        return frame
+
+    def on_product_select(self, event):
+        """Handler for when a product is selected from the list."""
+        if self.product_listbox.curselection():
+            index = self.product_listbox.curselection()[0]
+            selected_product = self.product_listbox.get(index)
+            self.selected_product_entry.config(state='normal')
+            self.selected_product_entry.delete(0, tk.END)
+            self.selected_product_entry.insert(0, selected_product)
+            self.selected_product_entry.config(state='disabled')
+
+    def add_to_cart(self):
+        """Add the selected product and quantity to the cart."""
+        selected_product = self.selected_product_entry.get()
+        quantity = self.quantity_entry.get()
+        if selected_product and quantity.isdigit():
+            cart_item = f'{selected_product} - Quantity: {quantity}'
+            self.cart_listbox.insert(tk.END, cart_item)
+            self.update_total_price(selected_product, int(quantity))
+
+    def update_total_price(self, product, quantity):
+        """Update the total price based on the product and quantity added to the cart."""
+        if product in self.products:
+            self.total_price += self.products[product] * quantity
+            self.total_price_entry.config(state='normal')
+            self.total_price_entry.delete(0, tk.END)
+            self.total_price_entry.insert(0, f'{self.total_price:.2f}')
+            self.total_price_entry.config(state='disabled')
+
+    def checkout(self):
+        """Display a summary of cart items and total price."""
+        cart_items = '\n'.join([self.cart_listbox.get(i) for i in range(self.cart_listbox.size())])
+        messagebox.showinfo("Checkout", f"Items in Cart:\n{cart_items}\n\nTotal Price: ${self.total_price:.2f}")
+
+    def show_about(self):
+        """Display information about the application."""
+        messagebox.showinfo("About", "Simple POS System Version 1.0")
+
+
+if __name__ == '__main__':
+    app = SimplePOSSystem()
+    app.mainloop()
