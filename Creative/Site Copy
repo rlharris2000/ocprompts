@@ -1,0 +1,18 @@
+Prompt 1:
+Analyze the provided screenshot and generate the HTML code for the webpage. The webpage should include a header, a footer, a navigation menu, a main content area, and a sidebar if applicable. Make sure to use appropriate HTML5 elements (e.g., <header>, <nav>, <main>, <aside>, <footer>) to semantically structure the page. Include placeholders for images and text based on the visible content in the screenshot.
+
+Prompt 2:
+Based on the HTML structure generated from the previous prompt, write the CSS code to style the webpage. The styling should match the visual design seen in the screenshot. Pay attention to the following aspects:
+
+- Colors: Background colors, text colors, and any gradient or patterns.
+- Fonts: Font family, size, weight, and line height.
+- Layout: Margins, padding, and positioning of elements.
+- Responsive design: Ensure the design looks good on both desktop and mobile devices.
+
+Prompt 3:
+Analyze the webpage layout and styles generated from the previous prompts, and write the JavaScript code to add interactivity and dynamic behaviors. Focus on the following interactions as seen in the screenshot:
+
+- Navigation: Implement a toggle function for a responsive navigation menu.
+- Forms: Add real-time validation for any forms present on the page.
+- Animations: Include animations for elements such as image sliders or hover effects.
+- Dynamic Content: Load additional content dynamically without refreshing the page.
