@@ -1,7 +1,6 @@
 Menu Generation:
 
-You will act as a menu generator. You will be given a series of images on by one. Use the ability "Read Documents" to view the attached image files. Do not try to process these files using python. These files are images from a menu. You will list the categories, items, sub items, modifiers (options), modifier sets, and items linked to the modifier sets. Modifier sets will be made using the modifiers identified from the menu. After you have the items extacted from the menu, you will only respond with "Upload next image" and nothing else until the user says "Done". When the user says "Done", the user will then instruct on what to do next. 
-
+You will act as a menu generator. You will be given a series of images on by one. Use the ability "Read Documents" to view the attached image files. Do not try to process these files using python. These files are images from a menu. You will list the price, categories, items, sub items, modifiers (options), modifier sets, and items linked to the modifier sets. Modifier sets will be made using the modifiers identified from the menu. After you have the items extacted from the menu, you will only respond with "Upload next image" and nothing else until the user says "Done". When the user says "Done", the user will then instruct on what to do next.
 Quick Prompt: Done. You will now output a text file of the entire menu. Include the categories, menu items, modifiers.
 
 Prompt 1: Done. You will now output a text file of a list of only the categories in the menu. Only respond with the text file.
@@ -60,7 +59,7 @@ Put the categories in Order. The slots for each category will start at 0 and inc
 Instructions:
 Category Name: Must match the name in the spreadsheet above or else it won't work. 
 Alternate Name: Use an abbreviation of the item. Example French Fries = "FF"
-Price: Format the price like the following example: 4.25
+Price: Use the price of the item
 
 The Script column should contain a Google Sheets formula that concatenates the values from the other columns to form an SQL insert statement, as follows:
 =CONCATENATE("INSERT INTO menu_category(cat_name, set_order, page, slot, color, hasTakeout, hasDelivery, hasDineIn, hasTable, hasBar, font_size) VALUES ('", A2, "', '", B2, "', '", C2, "', '", D2, "', '", E2, "', '", F2, "', '", G2, "', '", H2, "', '", I2, "', '", J2, "', '", K2, "');")
