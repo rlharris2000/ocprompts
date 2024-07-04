@@ -1,0 +1,36 @@
+import openai
+import time
+
+# Initialize the OpenAI client
+client = openai.OpenAI(api_key='sk-proj-ghWnfew30gurdFiBi749T3BlbkFJfeiq7v5Diq9XHYwL6YQV')
+
+# Step 1: Create a thread
+thread = client.beta.threads.create()
+
+# Step 2: Add user message to the thread
+client.beta.threads.messages.create(
+    thread_id=thread.id,
+    role="user",
+    content="Your message here"
+)
+
+# Step 3: Run the assistant
+run = client.beta.threads.runs.create(
+    thread_id=thread.id,
+    assistant_id='asst_cUEk4lV9ki63PD68VqUAekXr'
+)
+
+# Step 4: Check run status periodically
+while run.status != "completed":
+    time.sleep(1)  # Wait for 1 second before checking again
+    run = client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
+
+# Step 5: Retrieve the response
+messages = client.beta.threads.messages.list(thread_id=thread.id)
+assistant_message = None
+for msg in messages.data:
+    if msg.role == "assistant":
+        assistant_message = msg.content[0].text.value
+        break
+
+print(assistant_message)
