@@ -17,7 +17,33 @@ Upload all images in a new chat using model ChtGPT 4o or 4.
 Prompt 1:
 You will act as a spreadsheet generator. You will only output a spreadsheet and nothing else. 
 
-Generate a spreadsheet called "Menu Categories" with the following columns: Category Name, Set Order, Page, Slot, Color, Available Online (Y/N), Available Takeout (Y/N), Available Retail (Y/N), Available Table (Y/N), Available Bar (Y/N), Font Size, and Script.
+Generate a spreadsheet called "Category Import" with the following columns: 
+Category Name
+Set Order
+Page
+Slot
+Color
+Available Online (Y/N)
+Available Takeout (Y/N)
+Available Retail (Y/N)
+Available Table (Y/N)
+Available Bar (Y/N)
+Font Size 
+Script
+
+For each category, add a single row with the following default values:
+Set Order: 0
+Page: 1
+Color: Blue
+Available Online: Y
+Available Takeout: Y
+Available Retail: Y
+Available Table: Y
+Available Bar: Y
+Font Size: 8
+Ensure that the Slot value increments by 1 for each new entry, starting from 0.
+Script
+
 For each category, add a single row with the following default values:
 Set Order: 0
 Page: 1
@@ -31,11 +57,25 @@ Font Size: 8
 Ensure that the Slot value increments by 1 for each new entry, starting from 0.
 
 SCRIPT (DO NOT PASTE INTO CHATGPT, ONLY THE SPREADSHEET)
-=CONCATENATE("INSERT INTO menu_category(cat_name, set_order, page, slot, color, hasTakeout, hasDelivery, hasDineIn, hasTable, hasBar, font_size) VALUES ('",A2,"','",B2,"','",C2,"','",D2,"','",E2,"','",F2,"','",G2,"','",H2,"','",I2,"','",J2,"','",K2,"');"
-
+=CONCATENATE("INSERT INTO menu_menus (cat_id, menu_name, menu_abb, slot, color, font_size, sub_items) VALUES ((SELECT cat_id FROM menu_category WHERE cat_name = '";A2;"'), '";C2;"', '', ";B2;", '";F2;"', '";G2;"', '";K2;"');";"INSERT INTO menu_items (menu_id, item_name, item_abb, item_price, taxable, printer, printer2, printer3) "&"SELECT menu_id, '"&C2&"', '', '"&F2&"', '"&G2&"', '"&H2&"', '"&I2&"', '"&J2&"' "&"FROM menu_menus "&"WHERE menu_name = '"&C2&"';")
 Prompt 2:
 You will act as a spreadsheet generator. You will only output a spreadsheet and nothing else. 
-Generate a spreadsheet called "Item Import" with the following columns: Category Name, Slot, Item Name, Alternate Name, Color, Price, Tax Code, Ptr 1, Ptr 2, Ptr 3, SubItem?, Script.
+
+Generate a spreadsheet called "Item Import" with the following columns: 
+
+Category Name
+Slot
+Item Name
+Alternate Name
+Color
+Price 
+Tax Code
+Ptr 1
+Ptr 2
+Ptr 3
+SubItem?
+Script.
+
 For each menu item, add a single row with the following default values:
 Color: Blue
 Font: 10
@@ -44,38 +84,58 @@ Ptr 1: 1
 Ptr 2: 0
 Ptr 3: 0
 SubItem: N
+
 Put the categories in Order. The slots for each category will start at 0 and increment by 1. 
 Instructions:
 Category Name: Must match the name in the spreadsheet above or else it won't work. 
-Alternate Name: Use an abbreviation of the item. Example French Fries = "FF"
-Price: Use the price of the item
+Leave the alternate name blank.
 
 SCRIPT (DO NOT PASTE INTO CHATGPT, ONLY THE SPREADSHEET)
-=CONCATENATE("INSERT INTO menu_category(cat_name, set_order, page, slot, color, hasTakeout, hasDelivery, hasDineIn, hasTable, hasBar, font_size) VALUES ('", A2, "', '", B2, "', '", C2, "', '", D2, "', '", E2, "', '", F2, "', '", G2, "', '", H2, "', '", I2, "', '", J2, "', '", K2, "');")
+=CONCATENATE("INSERT INTO menu_menus (cat_id, menu_name, menu_abb, slot, color, font_size, sub_items) VALUES ((SELECT cat_id FROM menu_category WHERE cat_name = '";A2;"'), '";C2;"', '', ";B2;", '";F2;"', '";G2;"', '";K2;"');";"INSERT INTO menu_items (menu_id, item_name, item_abb, item_price, taxable, printer, printer2, printer3) "&"SELECT menu_id, '"&C2&"', '', '"&F2&"', '"&G2&"', '"&H2&"', '"&I2&"', '"&J2&"' "&"FROM menu_menus "&"WHERE menu_name = '"&C2&"';")
 
 Prompt 3:
 You will act as a spreadsheet generator. You will only output a spreadsheet and nothing else. 
-Generate a spreadsheet called "Modifer Set Import" with the following columns: Option Set, Required, Type, Quantity, Multiples, Max Multiple, Sort Order, Auto Add, Font Size, Grid, Script.
+
+Generate a spreadsheet called "Modifier Sets Import" with the following columns: 
+Option Set
+Required
+Type
+Quantity
+Multiples 
+Max Multiple
+Sort Order
+Auto Add
+Font Size 
+Grid
+Script
+
 For each modifier set, add a single row with the following default values:
 Required: N
 Type: On
 Quantity: 0
 Multiples: N
 Max Multiple: 0
-Sort Orderf: 999
+Sort Order: 999
 Auto Add: N
 Font Size: 10
 Grid: 1x1
-Instructions:
-Type: This determines if it's a typeset or option set. Type sets, are for the types of items like chicken or fish. Options, are for things like ingredients or toppings like sasuage and pepperoni. Use logic to determine if it should be a Option set or Type set. To determine it's a typeset, Insert "T". If it's an option set, insert "O". 
 
-SCRIPT (DO NOT PASTE INTO CHATGPT, ONLY THE SPREADSHEET)
-=CONCATENATE("INSERT INTO menu_optionsets(optionset_name, required, type, quantity, multiples, max_multiple, sort_order, auto_add, font_size, grid) VALUES ('",A2,"','",B2,"','",C2,"','",D2,"','",E2,"','",F2,"','",G2,"','",H2,"','",I2,"','",J2,"' );")
+Instructions:
+Type: This determines if it's a typeset or option set. Type sets, are for the types of items like chicken or fish. Options, are for things like ingredients or toppings like sasuage and pepperoni. Use logic to determine if it should be a Option set or Type set. To determine it's a typeset, Insert "S". If it's an option set, insert "O". 
+
+SCRIPT
+=CONCATENATE("INSERT INTO menu_optionsets(optionset_name, required, type, quantity, multiples, max_multiple, sort_order, auto_add, font_size, grid) VALUES ('";A2;"','";B2;"','";C2;"','";D2;"','";E2;"','";F2;"','";G2;"','";H2;"','";I2;"','";J2;"' );")
 
 Prompt 4:
 You will act as a spreadsheet generator. You will only output a spreadsheet and nothing else. 
 
-Generate a spreadsheet called "Modifiers Assigned to Sets" with the following columns: OptionSet ID, Modifier, Price, Option Type, Sort Order, Color, Script. 
+Generate a spreadsheet called "Modifiers Assigned to Sets" with the following columns: OptionSet ID
+Modifier
+Price
+Option Type
+Sort Order
+Color
+Script
 
 For each modifier assigned to a set, add a single row with the following default values:
 
@@ -86,17 +146,75 @@ Instructions:
 OptionSet ID must be one of the modifier sets created in the last spreadsheet. 
 Price will default to 0 if it's not specified.
 
-SCRIPT (DO NOT PASTE INTO CHATGPT, ONLY THE SPREADSHEET)
-=CONCATENATE("INSERT INTO menu_options(optionset_id, option_name, option_price, option_type, sort_order, color) VALUES ((SELECT optionset_id FROM menu_optionsets WHERE optionset_name = '",A2,"'),'",B2,"','",C2,"','",D2,"','",E2,"','",F2,"');")
-EXTREMELY IMPORTANT: DISPLAY THE SPREADSHEET HERE
+SCRIPT
+=CONCATENATE("INSERT INTO menu_options(optionset_id, option_name, option_price, option_type, sort_order, color) VALUES ((SELECT optionset_id FROM menu_optionsets WHERE optionset_name = '";A2;"'),'";B2;"','";C2;"','";D2;"','";E2;"','";F2;"');")
 
 Prompt 5:
+
 You will act as a spreadsheet generator. You will only output a spreadsheet and nothing else. 
-Generate a spreadsheet called "Link Items To Modifier Sets" with the following columns: Item_id, OptionSet ID, and Script. 
+
+Generate a spreadsheet called "Link Items To Modifier Sets" with the following columns: Item_id
+OptionSet ID
+Script. 
+
 For each item linked to a modifier set, add a single row with the following default values:
 Instructions:
 Item_id must be one one of the menu items created in the spreadsheets above. 
 OptionSet ID must be one of the modifier sets created in the spreadsheets above.
 
 SCRIPT (DO NOT PASTE INTO CHATGPT, ONLY THE SPREADSHEET)
-=CONCATENATE("INSERT INTO menu_item2optionset(item_id, optionset_id) VALUES ((SELECT item_id FROM menu_items WHERE item_name ='",A2,"'),(SELECT optionset_id FROM menu_optionsets WHERE optionset_name = '",B2,"'));")
+=CONCATENATE("INSERT INTO menu_item2optionset(item_id, optionset_id) VALUES ((SELECT TOP 1 item_id FROM menu_items WHERE item_name = '";A2;"'), (SELECT TOP 1 optionset_id FROM menu_optionsets WHERE optionset_name = '";B2;"'));")
+
+
+Clear Menu:
+DELETE FROM menu_category;
+DELETE FROM menu_category_images;
+DELETE FROM menu_category2timeset;
+DELETE FROM menu_counters;
+DELETE FROM menu_hide2_terminal;
+DELETE FROM menu_history;
+DELETE FROM menu_item_ref;
+DELETE FROM menu_item2auto_fee;
+DELETE FROM menu_item2counter;
+DELETE FROM menu_item2inventory_batch;
+DELETE FROM menu_item2option;
+DELETE FROM menu_item2optionset;
+DELETE FROM menu_item2recommended;
+DELETE FROM menu_item2timeset;
+DELETE FROM menu_items;
+DELETE FROM menu_items_images;
+DELETE FROM menu_items_timed;
+DELETE FROM menu_menu2timeset;
+DELETE FROM menu_menus;
+DELETE FROM menu_menus_pages;
+DELETE FROM menu_modifiers;
+DELETE FROM menu_modifiers_extended;
+DELETE FROM menu_multisets;
+DELETE FROM menu_option2optionset;
+DELETE FROM menu_options;
+DELETE FROM menu_options_images;
+DELETE FROM menu_options_kds_station_bridge;
+DELETE FROM menu_options_templates;
+DELETE FROM menu_optionsets;
+DELETE FROM menu_price_levels;
+DELETE FROM menu_recommended_items;
+DELETE FROM menu_recommended_set;
+DELETE FROM menu_report_category;
+DELETE FROM menu_report_group;
+DELETE FROM menu_report_item2category;
+DELETE FROM menu_specials;
+DELETE FROM menu_specials_groups;
+DELETE FROM menu_specials_items;
+DELETE FROM menu_subitems_images;
+DELETE FROM menu_taxcodes;
+DELETE FROM menu_taxcodes_edits;
+DELETE FROM menu_times;
+DELETE FROM menu_timesets;
+DELETE FROM menu_version_info;
+DELETE FROM MenuSyncPending;
+DELETE FROM KioskMenu;
+DELETE FROM KioskMenuButton;
+DELETE FROM KioskMenuCategory;
+DELETE FROM KioskMenuDefaultItem;
+DELETE FROM KioskMenuOption;
+
