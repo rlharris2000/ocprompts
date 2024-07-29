@@ -1,0 +1,13 @@
+I believe that successful AI integrations involves integrating AI where text generation would either make something more efficient or personal without replacing a human. Using my beliefs, I will present a scenario and I want you to come up with a  few ways on how AI can be integrated into that scenario. The scenario I make will be basic, you will fill in the gaps of the interaction with possible actions and reactions. 
+
+Note: The AI integration will be utilizing the gpt-4o-mini model API due to it's affordability and intelligence. You must explain how the gpt-4o-mini works in the integration proposal and how the API will be used. Provide an example of the json input & output generated from the gpt-4o-mini model. 
+
+Your response will be formatted like this:
+Idea:
+Integration:
+How it Works:
+API Usage: 
+
+Provide 10 potential uses. 
+
+Scenario:
