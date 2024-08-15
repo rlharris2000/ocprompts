@@ -1,0 +1,149 @@
+import requests
+import pandas as pd
+import os
+from datetime import datetime
+
+# Define the credentials
+credentials = {
+    "Email": "robert@ordercounter.com",
+    "Password": "$DriftTwin2000"
+}
+headers_api = {
+    "Content-Type": "application/json"
+}
+
+# Define the URL for the login
+portal_url = "https://ocpartnerportalapi.azurewebsites.net/api/auth/login"
+
+# Function to fetch data for a given year
+def fetch_data_for_year(year, headers):
+    report_url = f"https://ocpartnerportalapi.azurewebsites.net/api/ops/GetMetricReport/{year}/-1"
+    report_response = requests.get(report_url, headers=headers)
+    if report_response.status_code == 200:
+        return report_response.json()
+    else:
+        raise Exception(f"Failed to retrieve report for {year}: {report_response.status_code}")
+
+# Function to fetch the current month's sites added
+def fetch_current_month_sites_added(headers):
+    recent_merchants_url = "https://ocpartnerportalapi.azurewebsites.net/api/ops/GetLiveRecentMerchants"
+    recent_merchants_response = requests.get(recent_merchants_url, headers=headers)
+    if recent_merchants_response.status_code == 200:
+        recent_merchants_data = recent_merchants_response.json()
+        print("Recent Merchants Data:", recent_merchants_data)  # Debugging print statement
+        return recent_merchants_data  # Return the raw data for now
+    else:
+        raise Exception(f"Failed to retrieve recent merchants: {recent_merchants_response.status_code}")
+
+# Make the POST request for login
+portal_login_response = requests.post(portal_url, headers=headers_api, json=credentials)
+
+# Check if the request was successful
+if portal_login_response.status_code == 200:
+    portal_login = portal_login_response.json()
+    portal_token = portal_login.get("Token")
+
+    # Set the headers with the bearer token
+    headers = {
+        "Authorization": f"Bearer {portal_token}"
+    }
+
+    # Fetch data for the current year and previous year
+    current_year = datetime.now().year
+    previous_year = current_year - 1
+
+    try:
+        data_current_year = fetch_data_for_year(current_year, headers)
+        data_previous_year = fetch_data_for_year(previous_year, headers)
+    except Exception as e:
+        print(e)
+        exit(1)
+
+    # Combine both datasets
+    ReportObject = data_current_year + data_previous_year
+
+    # Define the main metrics and their MetricTypeIDs
+    metric_types = {
+        5: "Total Sites",
+        13: "Sites Added",
+        14: "Sites Removed",
+        15: "Attrition",
+        1: "Net Sites Change",
+        2: "Net Stations Change",
+        3: "Net Dollars Change",
+        4: "Net Service Change",
+        6: "Total Billed $",
+        19: "Total POS SAAS $",
+        20: "All Other Fees $",
+        9: "Avg $ / Site",
+        10: "Avg $ / Station",
+        11: "Avg Term / Site"
+    }
+
+    # Extract data for the defined metrics
+    extracted_data = []
+    for item in ReportObject:
+        metric_name = metric_types.get(item['MetricTypeID'])
+        if metric_name:
+            extracted_data.append({
+                "MetricTypeID": item['MetricTypeID'],
+                "Metric": metric_name,
+                "Value": item['Value'],
+                "ReportDate": item['ReportDate']
+            })
+
+    # Create a DataFrame
+    df = pd.DataFrame(extracted_data)
+
+    # Convert ReportDate to datetime
+    df['ReportDate'] = pd.to_datetime(df['ReportDate'])
+
+    # Get the current month in 'YYYY-MM' format
+    current_month = datetime.now().strftime('%Y-%m')
+
+    # Fetch the current month's "Sites Added" value using the new API
+    try:
+        current_month_sites_added_value = fetch_current_month_sites_added(headers)
+    except Exception as e:
+        print(e)
+        exit(1)
+
+    # Create a DataFrame for the new row with only the "Sites Added" value
+    if current_month_sites_added_value is not None:
+        new_row = pd.DataFrame({
+            "MetricTypeID": [13],
+            "Metric": ["Sites Added"],
+            "Value": [current_month_sites_added_value],
+            "ReportDate": [pd.to_datetime(current_month + '-01')]
+        })
+        df = pd.concat([df, new_row], ignore_index=True)
+
+    # Pivot the main DataFrame to make metrics the columns
+    pivot_df = df.pivot_table(index='ReportDate', columns='Metric', values='Value').reset_index()
+
+    # Convert each metric column to float, if possible
+    for metric in metric_types.values():
+        if metric in pivot_df.columns:
+            pivot_df[metric] = pd.to_numeric(pivot_df[metric], errors='coerce')
+
+    # Format the specified columns as currency
+    currency_columns = [
+        "All Other Fees $", "Avg $ / Site", "Avg $ / Station",
+        "Avg Term / Site", "Net Dollars Change", "Total Billed $"
+    ]
+
+    for column in currency_columns:
+        if column in pivot_df.columns:
+            pivot_df[column] = pivot_df[column].apply(lambda x: "${:,.2f}".format(x) if pd.notnull(x) else x)
+
+    # Define the output directory and filename
+    output_dir = r'C:\Users\Rlhar\Zoho WorkDrive (ordercounter7356)\My Folders\Data'
+    os.makedirs(output_dir, exist_ok=True)  # Create the directory if it does not exist
+    excel_filename = os.path.join(output_dir, 'Partner_Portal_Data.xlsx')
+
+    # Write the DataFrame to an Excel file
+    pivot_df.to_excel(excel_filename, index=False)
+
+    print(f"Report has been written to {excel_filename}")
+else:
+    print(f"Failed to login: {portal_login_response.status_code}")
