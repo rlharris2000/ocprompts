@@ -1,0 +1,155 @@
+import sys
+import requests
+import pandas as pd
+from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, QTextEdit, QPushButton, QFileDialog
+from PySide6.QtCore import Qt
+
+# Define the credentials
+credentials = {
+    "Email": "robert@ordercounter.com",
+    "Password": "$DriftTwin2000"
+}
+headers_api = {
+    "Content-Type": "application/json"
+}
+
+# Define the URL for the login
+portal_url = "https://ocpartnerportalapi.azurewebsites.net/api/auth/login"
+
+# Define the URL template for fetching data
+url_template = "https://ocpartnerportalapi.azurewebsites.net/api/MerchantsFiltered3/{}/{}/0/2/0"
+
+# Function to authenticate and get the token
+def authenticate():
+    print("Authenticating...")
+    response = requests.post(portal_url, headers=headers_api, json=credentials)
+    if response.status_code == 200:
+        print("Authentication successful")
+        return response.json().get("Token")
+    else:
+        raise Exception(f"Failed to login: {response.status_code}")
+
+# Function to fetch data from the given API endpoint for a specific year and month
+def fetch_data_for_month(token, year, month):
+    print(f"Fetching data for {year}-{month}...")
+    url = url_template.format(year, month)
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        json_response = response.json()
+        if len(json_response) > 3:
+            print(f"Data fetched for {year}-{month}")
+            return json_response[3]  # Fetch only the 4th list
+        else:
+            print(f"No sufficient data for {year}-{month}")
+            return []
+    else:
+        raise Exception(f"Failed to fetch data for {year}-{month}: {response.status_code}")
+
+# Function to fetch data for all years and months in the specified range
+def fetch_all_data(token):
+    all_data = []
+    for year in range(2020, 2026):
+        for month in range(1, 13):
+            try:
+                month_data = fetch_data_for_month(token, year, month)
+                all_data.extend(month_data)
+            except Exception as e:
+                print(f"Error fetching data for {year}-{month}: {str(e)}")
+    return all_data
+
+# PySide6 Application
+class MainWindow(QMainWindow):
+    def __init__(self, data):
+        super().__init__()
+
+        self.setWindowTitle("API Data Viewer")
+        self.setGeometry(100, 100, 800, 600)
+
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+
+        layout = QVBoxLayout()
+        central_widget.setLayout(layout)
+
+        label = QLabel("API Data:", self)
+        label.setAlignment(Qt.AlignTop)
+        layout.addWidget(label)
+
+        text_edit = QTextEdit(self)
+        text_edit.setReadOnly(True)
+        layout.addWidget(text_edit)
+
+        save_button = QPushButton("Save to Spreadsheet", self)
+        save_button.clicked.connect(self.save_to_spreadsheet)
+        layout.addWidget(save_button)
+
+        self.data = data
+        formatted_data = self.format_data(data)
+        text_edit.setPlainText(formatted_data)
+
+    def format_data(self, data):
+        # Formatting data to show required fields
+        formatted_data = "Merchant Data:\n\n"
+        for item in data:
+            merchant_name = item.get("Name", "N/A")
+            merchant_created = item.get("Created", "N/A")
+            partner_name = item.get("MerchantPartner", {}).get("Name", "N/A")
+            fees_info = "\n".join([f"Fee Name: {fee.get('Name', 'N/A')} Created: {fee.get('Created', 'N/A')}" for fee in
+                                   item.get("Fees", [])])
+
+            formatted_data += f"Merchant Name: {merchant_name}\n"
+            formatted_data += f"Created: {merchant_created}\n"
+            formatted_data += f"MerchantPartner Name: {partner_name}\n"
+            formatted_data += f"Fees:\n{fees_info}\n\n"
+        return formatted_data
+
+    def save_to_spreadsheet(self):
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save File", "", "Excel Files (*.xlsx)")
+        if file_path:
+            self.generate_spreadsheet(file_path)
+
+    def generate_spreadsheet(self, file_path):
+        rows = []
+        for item in self.data:
+            merchant_name = item.get("Name", "N/A")
+            merchant_created = item.get("Created", "N/A")
+            partner_name = item.get("MerchantPartner", {}).get("Name", "N/A")
+            if item.get("Fees"):
+                last_fee = item.get("Fees")[-1]
+                fee_created = last_fee.get('Created', "N/A")
+            else:
+                fee_created = "N/A"
+            rows.append({
+                "Merchant Name": merchant_name,
+                "Merchant Created": merchant_created,
+                "MerchantPartner Name": partner_name,
+                "Last Fee Created": fee_created
+            })
+
+        df = pd.DataFrame(rows)
+        # Convert the date fields to datetime
+        df['Merchant Created'] = pd.to_datetime(df['Merchant Created'], errors='coerce')
+        df['Last Fee Created'] = pd.to_datetime(df['Last Fee Created'], errors='coerce')
+        df.to_excel(file_path, index=False)
+
+def main():
+    app = QApplication(sys.argv)
+
+    try:
+        token = authenticate()
+        data = fetch_all_data(token)
+    except Exception as e:
+        print(str(e))
+        sys.exit(1)
+
+    window = MainWindow(data)
+    window.show()
+
+    sys.exit(app.exec())
+
+if __name__ == "__main__":
+    main()
