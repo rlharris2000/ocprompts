@@ -1,0 +1,106 @@
+import requests
+import pandas as pd
+import os
+from datetime import datetime
+
+# Define the credentials
+credentials = {
+    "Email": "robert@ordercounter.com",
+    "Password": "$DriftTwin2000"
+}
+headers_api = {
+    "Content-Type": "application/json"
+}
+
+# Define the URL for the login
+portal_url = "https://ocpartnerportalapi.azurewebsites.net/api/auth/login"
+
+# Function to fetch license report for a given billing cycle
+def fetch_license_report(billing_cycle, want_activated, want_deactivated, headers):
+    url = "https://ocpartnerportalapi.azurewebsites.net/api/reports/GetLicenseReport"
+    payload = {
+        "billingCycle": billing_cycle,
+        "partnerIDs": [
+    30, 27, 24, 21, 18, 54, 37, 104, 14, 77, 35,
+    89, 34, 61, 70, 32, 80, 84, 87, 86, 131, 52,
+    57, 112, 85, 28, 122, 56, 82, 121, 83, 123,
+    76, 68, 133, 26, 130, 103, 94, 71, 50, 63,
+    95, 110, 23, 22, 109, 113, 127, 69, 107, 75,
+    20, 101, 126, 111, 66, 105, 115, 116, 119,
+    67, 132, 124, 92, 97, 16, 51, 100, 114, 78,
+    96, 88, 118, 117, 128, 129, 59, 64, 62, 125,
+    79, 120, 58, 93
+],
+        "serviceIDs": [10, 1, 5, 11, 15, 6, 2, 4, 22, 3, 9, 7, 12, 13, 18, 14, 17, 19, 20, 21, 23, 24, 25, 16],
+        "wantActivated": want_activated,
+        "wantDeactivated": want_deactivated
+    }
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise Exception(f"Failed to retrieve license report for {billing_cycle}: {response.status_code}")
+
+# Make the POST request for login
+portal_login_response = requests.post(portal_url, headers=headers_api, json=credentials)
+if portal_login_response.status_code == 200:
+    portal_login = portal_login_response.json()
+    portal_token = portal_login.get("Token")
+    headers = {
+        "Authorization": f"Bearer {portal_token}",
+        "Content-Type": "application/json"
+    }
+
+    # Explicitly define billing cycles as provided
+    billing_cycles = [f"{year}-{month:02d}-01T00:00:00" for year in range(2021, 2025) for month in range(1, 13) if not (year == 2024 and month > 6)]
+
+    all_reports = []
+    for cycle in billing_cycles:
+        try:
+            # Fetch activated services
+            activated_data = fetch_license_report(cycle, True, False, headers)
+            # Fetch deactivated services
+            deactivated_data = fetch_license_report(cycle, False, True, headers)
+
+            # Process activated data
+            if activated_data:
+                for record in activated_data:
+                    report = {item['Key']: item['Value'] for item in record}
+                    if 'MN' in report and 'PN' in report and 'Service' in report:
+                        all_reports.append({
+                            'Partner Name': report['PN'],
+                            'Merchant Name': report['MN'],
+                            'Service': report['Service'],
+                            'Billing Cycle': cycle,
+                            'Status': 'Activated'
+                        })
+
+            # Process deactivated data
+            if deactivated_data:
+                for record in deactivated_data:
+                    report = {item['Key']: item['Value'] for item in record}
+                    if 'MN' in report and 'PN' in report and 'Service' in report:
+                        all_reports.append({
+                            'Partner Name': report['PN'],
+                            'Merchant Name': report['MN'],
+                            'Service': report['Service'],
+                            'Billing Cycle': cycle,
+                            'Status': 'Deactivated'
+                        })
+
+        except Exception as e:
+            print(e)
+            exit(1)
+
+    if all_reports:
+        df = pd.DataFrame(all_reports)
+        df['Billing Cycle'] = pd.to_datetime(df['Billing Cycle'])
+        output_dir = r'C:\Users\Rlhar\Zoho WorkDrive (ordercounter7356)\My Folders\Data'
+        os.makedirs(output_dir, exist_ok=True)
+        excel_filename = os.path.join(output_dir, 'License_Report_Data.xlsx')
+        df.to_excel(excel_filename, index=False)
+        print(f"Report has been written to {excel_filename}")
+    else:
+        print("No data to write to the Excel file.")
+else:
+    print(f"Failed to login: {portal_login_response.status_code}")
